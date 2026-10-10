@@ -4,64 +4,84 @@ const API_URL =
 const locations = {};
 
 const riskSettings = {
-    HIGH: {
+    "HEAVY RAINFALL": {
         className: "high",
-        panelClass: "",
-        symbol: "!",
-        label: "HIGH RISK"
+        label: "HEAVY RAINFALL"
     },
-    WARNING: {
+    CAUTION: {
         className: "warning",
-        panelClass: "warning",
-        symbol: "!",
-        label: "WARNING"
+        label: "CAUTION"
     },
-    SAFE: {
+    MONITOR: {
         className: "safe",
-        panelClass: "safe",
-        symbol: "✓",
-        label: "LOW RISK"
+        label: "MONITOR"
+    },
+    "DATA UNAVAILABLE": {
+        className: "warning",
+        label: "DATA UNAVAILABLE"
     }
 };
 
-const select = document.getElementById("location-select");
-const riskPanel = document.getElementById("risk-panel");
-const locationGrid = document.getElementById("location-grid");
+const riskTitle = document.getElementById("current-risk");
+const riskLocation = document.getElementById("current-location");
+const recommendation = document.getElementById("safety-recommendation");
+const rainfallDisplay = document.getElementById("rainfall");
+const waterLevelDisplay = document.getElementById("water-level");
+const locationCards = document.getElementById("location-cards");
+const updatedTime = document.getElementById("updated-time");
+
+function escapeHTML(value) {
+    return String(value ?? "").replace(/[&<>"']/g, character => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+    })[character]);
+}
+
+function formatValue(value, suffix = "") {
+    return typeof value === "number"
+        ? `${value}${suffix}`
+        : "Unavailable";
+}
+
+function getRisk(riskName) {
+    return riskSettings[riskName] || riskSettings["DATA UNAVAILABLE"];
+}
 
 function renderLocationCards() {
-    locationGrid.innerHTML = Object.entries(locations)
-        .map(([key, place]) => {
-            const risk = riskSettings[place.risk];
+    locationCards.innerHTML = Object.entries(locations).map(([key, place]) => {
+        const risk = getRisk(place.risk);
 
-            return `
-                <article
-                    class="location-card"
-                    data-location="${key}"
-                    tabindex="0"
-                    role="button"
-                    aria-label="View ${place.name} sample data"
-                    aria-pressed="false"
-                >
-                    <div class="card-top">
-                        <h3>${place.name}</h3>
-                        <span class="risk-tag ${risk.className}">
-                            ${place.risk}
-                        </span>
-                    </div>
-
-                    <p class="card-measurement">
-                        Rainfall<br>
-                        <strong>${place.rainfall} mm</strong>
-                    </p>
-
-                    <p class="card-measurement">
-                        Water level<br>
-                        <strong>${place.waterLevel} cm</strong>
-                    </p>
-                </article>
-            `;
-        })
-        .join("");
+        return `
+            <article class="location-card ${risk.className}"
+                data-location="${escapeHTML(key)}"
+                tabindex="0"
+                role="button"
+                aria-label="View ${escapeHTML(place.name)} weather data"
+                aria-pressed="false">
+                <div class="card-top">
+                    <h3>${escapeHTML(place.name)}</h3>
+                    <span class="risk-tag ${risk.className}">
+                        ${escapeHTML(risk.label)}
+                    </span>
+                </div>
+                <p class="card-measurement">
+                    Modelled rainfall (24h)<br>
+                    <strong>${escapeHTML(formatValue(place.rainfall, " mm"))}</strong>
+                </p>
+                <p class="card-measurement">
+                    Water level<br>
+                    <strong>${escapeHTML(formatValue(place.waterLevel, " cm"))}</strong>
+                </p>
+                <p class="card-measurement">
+                    Temperature<br>
+                    <strong>${escapeHTML(formatValue(place.temperature, " °C"))}</strong>
+                </p>
+            </article>
+        `;
+    }).join("");
 }
 
 function updateDashboard(locationKey) {
@@ -69,34 +89,24 @@ function updateDashboard(locationKey) {
 
     if (!place) return;
 
-    const risk = riskSettings[place.risk];
+    const risk = getRisk(place.risk);
 
-    document.getElementById("risk-title").textContent = risk.label;
-    document.getElementById("risk-location").textContent =
-        `${place.name}, Tamil Nadu`;
-
-    document.getElementById("risk-symbol").textContent = risk.symbol;
-    document.getElementById("rainfall").textContent = place.rainfall;
-    document.getElementById("water-level").textContent = place.waterLevel;
-    document.getElementById("recommendation").textContent =
-        place.recommendation;
-
-    riskPanel.classList.remove("warning", "safe");
-
-    if (risk.panelClass) {
-        riskPanel.classList.add(risk.panelClass);
-    }
+    riskTitle.textContent = risk.label;
+    riskLocation.textContent = `${place.name}, Tamil Nadu`;
+    rainfallDisplay.textContent = formatValue(place.rainfall, " mm");
+    waterLevelDisplay.textContent = formatValue(place.waterLevel, " cm");
+    recommendation.textContent = place.recommendation ||
+        "Continue monitoring weather and official local advisories. Lower rainfall does not guarantee flood safety.";
 
     document.querySelectorAll(".location-card").forEach(card => {
         const selected = card.dataset.location === locationKey;
-
         card.classList.toggle("selected", selected);
         card.setAttribute("aria-pressed", String(selected));
     });
 }
 
 async function loadLocations() {
-    locationGrid.textContent = "Loading sample location data...";
+    locationCards.textContent = "Loading weather-model data...";
 
     try {
         const response = await fetch(API_URL);
@@ -116,8 +126,9 @@ async function loadLocations() {
 
             locations[key] = {
                 name: item.location,
-                rainfall: item.rainfall_mm,
+                rainfall: item.modelled_precipitation_last_24h_mm,
                 waterLevel: item.water_level_cm,
+                temperature: item.temperature_c,
                 risk: item.risk,
                 recommendation: item.recommendation
             };
@@ -125,41 +136,49 @@ async function loadLocations() {
 
         renderLocationCards();
 
-        const requestedLocation = select.value.toLowerCase();
-        const initialLocation = locations[requestedLocation]
-            ? requestedLocation
-            : Object.keys(locations)[0];
+        const firstLocation = Object.keys(locations)[0];
 
-        select.innerHTML = Object.entries(locations)
-            .map(([key, place]) =>
-                `<option value="${key}">${place.name}</option>`
-            )
-            .join("");
+        if (firstLocation) {
+            updateDashboard(firstLocation);
+        }
 
-        select.value = initialLocation;
-        updateDashboard(initialLocation);
+        if (updatedTime) {
+            const fetchedAt = data.locations
+                .map(item => item.fetched_at_utc)
+                .filter(Boolean)
+                .sort()
+                .pop();
 
+            updatedTime.textContent = fetchedAt
+                ? `Weather data timestamp: ${fetchedAt}`
+                : "Weather data retrieved from Open-Meteo";
+        }
+
+        console.info("FloodGuard weather data loaded:", data);
     } catch (error) {
-        console.error("Could not load FloodGuard API data:", error);
-        locationGrid.textContent =
-            "Unable to load data from AWS. Please check your connection.";
+        console.error("FloodGuard loading error:", error);
+
+        locationCards.textContent =
+            "Weather data is temporarily unavailable. Please try again later.";
+
+        riskTitle.textContent = "DATA UNAVAILABLE";
+        riskLocation.textContent = "Weather data could not be loaded";
+        rainfallDisplay.textContent = "Unavailable";
+        waterLevelDisplay.textContent = "Unavailable";
+        recommendation.textContent =
+            "Check official local weather and flood advisories. This dashboard is not an official warning system.";
     }
 }
 
-select.addEventListener("change", event => {
-    updateDashboard(event.target.value);
-});
-
-locationGrid.addEventListener("click", event => {
+locationCards.addEventListener("click", event => {
     const card = event.target.closest(".location-card");
 
-    if (!card) return;
-
-    select.value = card.dataset.location;
-    updateDashboard(card.dataset.location);
+    if (card) {
+        updateDashboard(card.dataset.location);
+    }
 });
 
-locationGrid.addEventListener("keydown", event => {
+locationCards.addEventListener("keydown", event => {
     if (event.key !== "Enter" && event.key !== " ") return;
 
     const card = event.target.closest(".location-card");
@@ -167,8 +186,13 @@ locationGrid.addEventListener("keydown", event => {
     if (!card) return;
 
     event.preventDefault();
-    select.value = card.dataset.location;
     updateDashboard(card.dataset.location);
+});
+
+document.querySelectorAll(".location-btn").forEach(button => {
+    button.addEventListener("click", () => {
+        updateDashboard(button.dataset.location.toLowerCase());
+    });
 });
 
 loadLocations();

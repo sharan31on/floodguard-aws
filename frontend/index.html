@@ -1,118 +1,101 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="FloodGuard environmental risk awareness dashboard.">
-    <title>FloodGuard | Environmental Risk Monitor</title>
+    <meta name="theme-color" content="#0b1728">
+    <meta name="description" content="FloodGuard provides environmental risk awareness using weather-model data and clear safety information.">
+    <title>FloodGuard | Environmental Intelligence</title>
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
-    <header class="topbar">
-        <a class="brand" href="#" aria-label="FloodGuard home">
-            <span class="brand-icon">🌊</span>
-            <span>Flood<span class="brand-highlight">Guard</span></span>
-        </a>    <span class="demo-badge">DEMO MODE</span>
-</header>
+<main class="dashboard">
 
-<main class="container">
-    <section class="hero">
-        <p class="eyebrow">ENVIRONMENTAL INTELLIGENCE</p>
-        <h1>Know the risk.<br><span>Make safer decisions.</span></h1>
+    <header class="hero">
+        <p class="section-label">ENVIRONMENTAL INTELLIGENCE</p>
+        <h1>Know the risk.<br>Make safer decisions.</h1>
         <p class="hero-description">
-            Understand rainfall and water-level observations through
-            simple environmental risk indicators.
+            Understand rainfall and weather conditions through simple
+            environmental risk indicators.
+        </p>
+    </header>
+
+    <section class="location-section">
+        <p class="section-label">MONITORING AREA</p>
+        <h2>Location overview</h2>
+
+        <div class="location-selector" aria-label="Choose monitoring location">
+            <button type="button" class="location-btn" data-location="Trichy">📍 Trichy</button>
+            <button type="button" class="location-btn" data-location="Thanjavur">📍 Thanjavur</button>
+            <button type="button" class="location-btn" data-location="Salem">📍 Salem</button>
+        </div>
+    </section>
+
+    <section class="current-risk">
+        <p class="section-label">CURRENT WEATHER RISK INDICATOR</p>
+        <h2 id="current-risk">Loading weather data...</h2>
+        <p id="current-location">Checking monitoring locations...</p>
+    </section>
+
+    <section class="recommendation">
+        <p class="section-label">SAFETY RECOMMENDATION</p>
+        <p id="safety-recommendation">
+            Loading the latest weather information. Follow official local
+            weather and flood advisories.
         </p>
     </section>
 
-    <section class="location-section" aria-labelledby="location-heading">
-        <div>
-            <p class="section-label">MONITORING AREA</p>
-            <h2 id="location-heading">Location overview</h2>
-        </div>
-
-        <label class="location-control" for="location-select">
-            <span>📍</span>
-            <select id="location-select" aria-label="Choose monitoring location">
-                <option value="trichy">Trichy</option>
-                <option value="thanjavur">Thanjavur</option>
-                <option value="salem">Salem</option>
-            </select>
-        </label>
-    </section>
-
-    <section class="risk-panel" id="risk-panel" aria-live="polite">
-        <div class="risk-main">
-            <div>
-                <p class="section-label">CURRENT DEMO RISK</p>
-                <h2 id="risk-title">HIGH RISK</h2>
-                <p id="risk-location">Trichy, Tamil Nadu</p>
-            </div>
-            <div class="risk-symbol" id="risk-symbol" aria-hidden="true">!</div>
-        </div>
-
-        <div class="risk-divider"></div>
-
-        <p class="recommendation-label">SAFETY RECOMMENDATION</p>
-        <p class="recommendation" id="recommendation">
-            Avoid low-lying roads and check local official advisories.
-        </p>
-    </section>
-
-    <section class="metrics" aria-label="Environmental measurements">
+    <section class="metrics-grid" aria-label="Selected location weather">
         <article class="metric-card">
             <div class="metric-heading">
-                <span class="metric-icon">🌧️</span>
+                <span aria-hidden="true">🌧️</span>
                 <span>RAINFALL</span>
             </div>
-            <p class="metric-value"><span id="rainfall">85</span><small> mm</small></p>
-            <p class="metric-note">Demonstration measurement</p>
+            <h2 id="rainfall">--</h2>
+            <p class="metric-note">Modelled rainfall over the last 24 hours</p>
         </article>
 
         <article class="metric-card">
             <div class="metric-heading">
-                <span class="metric-icon">🌊</span>
+                <span aria-hidden="true">🌊</span>
                 <span>WATER LEVEL</span>
             </div>
-            <p class="metric-value"><span id="water-level">70</span><small> cm</small></p>
-            <p class="metric-note">Demonstration measurement</p>
+            <h2 id="water-level">Unavailable</h2>
+            <p class="metric-note">Verified water-level data source not connected</p>
         </article>
     </section>
 
-    <section class="locations-section">
-        <div class="section-heading">
-            <div>
-                <p class="section-label">REGIONAL OVERVIEW</p>
-                <h2>Monitor locations</h2>
-            </div>
-            <span class="live-indicator">
-                <span class="indicator-dot"></span>
-                Sample data
-            </span>
-        </div>
+    <section class="regional-section">
+        <p class="section-label">REGIONAL OVERVIEW</p>
+        <h2>Monitor locations</h2>
+        <p class="section-description">Weather data from Open-Meteo</p>
 
-        <div class="location-grid" id="location-grid">
-            <!-- Location cards are generated by JavaScript. -->
+        <div id="location-cards" class="location-cards">
+            <p>Loading weather data for monitoring locations...</p>
         </div>
     </section>
 
     <section class="notice">
         <span aria-hidden="true">ℹ️</span>
         <p>
-            <strong>Prototype notice:</strong> All displayed measurements
-            are sample data for demonstration, not live observations.
-            Risk categories use configurable project-defined rules.
-            This tool is not an official warning system. Follow local
-            authorities and official weather or flood advisories.
+            <strong>Important notice:</strong> Rainfall values are estimates
+            from the Open-Meteo weather model, not direct rain-gauge
+            observations. Verified water-level data is not connected.
+            Risk indicators are informational and are not official flood
+            warnings. Lower rainfall does not guarantee flood safety.
+            Always follow local authorities and official weather or flood
+            advisories.
         </p>
     </section>
 
     <footer>
         <p>FloodGuard · Environmental Risk Awareness</p>
-        <p id="updated-time">Demo data · Updated for this session</p>
+        <p id="updated-time">Weather data · Waiting for latest update</p>
     </footer>
+
 </main>
 
 <script src="script.js"></script>
-
 </body>
 </html>
