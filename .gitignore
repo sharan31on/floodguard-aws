@@ -2,3 +2,7 @@ backend/aws/
 backend/awscliv2.zip
 backend/__pycache__/
 *.pyc
+
+# Python generated files
+__pycache__/
+*.py[cod]
